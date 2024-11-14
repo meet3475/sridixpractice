@@ -2,26 +2,20 @@ import React, { useEffect } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import { getproduct } from '../../../redux/action/product.action';
 import { decrementQuantity, incrementQuantity, removeFromCart } from '../../../redux/slice/cart.slice';
+import { ToastContainer, toast } from 'react-toastify';
+import 'react-toastify/dist/ReactToastify.css';
+import Swal from 'sweetalert2';
+
 
 function Cart() {
     const dispatch = useDispatch();
     const products = useSelector((state) => state.products.products) || [];
     const cart = useSelector(state => state.cart);
-    console.log(cart);
-    
 
     const cartData = cart.cart.map((v) => {
-        console.log(v.id);
-        
         const productData = products.find((v1) => Number(v1.id) === Number(v.id));
-        console.log(productData);
-        
         return { ...productData, quantity: v.quantity };
-        
     });
-
-    console.log(cartData);
-    
 
     const totalAmt = cartData.reduce((acc, v) => acc + v.quantity * v.price, 0);
 
@@ -31,18 +25,35 @@ function Cart() {
 
     const handlePlus = (id) => {
         dispatch(incrementQuantity(Number(id)));
+        toast.success("Item quantity increased!");
     };
 
     const handleMinus = (id) => {
         dispatch(decrementQuantity(Number(id)));
+        toast.info("Item quantity decreased!");
     };
 
     const handleDelete = (id) => {
-        dispatch(removeFromCart(Number(id)));
+        Swal.fire({
+            title: 'Confirm Delete',
+            text: 'Are you sure you want to remove this item from the cart?',
+            icon: 'warning',
+            showCancelButton: true,
+            confirmButtonText: 'Yes',
+            cancelButtonText: 'No'
+        }).then((result) => {
+            if (result.isConfirmed) {
+                dispatch(removeFromCart(Number(id)));
+                toast.error("Item removed from cart!");
+            } else {
+                toast.info("Item not removed.");
+            }
+        });
     };
 
     return (
         <div>
+            <ToastContainer position="top-right" autoClose={3000} hideProgressBar={false} />
             <div className="container-fluid page-header py-5">
                 <h1 className="text-center text-white display-6">Cart</h1>
                 <ol className="breadcrumb justify-content-center mb-0">

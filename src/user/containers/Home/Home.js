@@ -4,7 +4,8 @@ import 'owl.carousel/dist/assets/owl.carousel.css';
 import 'owl.carousel/dist/assets/owl.theme.default.css';
 import { useDispatch, useSelector } from 'react-redux';
 import { getproduct } from '../../../redux/action/product.action';
-import { getcategory } from '../../../redux/action/category.action';
+import { Link } from 'react-router-dom';
+
 
 function Home(props) {
 
@@ -13,19 +14,21 @@ function Home(props) {
     const products = useSelector((state) => state.products.products) || [];
     console.log(products);
 
-    const category = useSelector((state) => state.category.category) || [];
-    console.log(category);
-
     useEffect(() => {
         dispatch(getproduct())
-        dispatch(getcategory())
-
         const storedProducts = JSON.parse(localStorage.getItem("products"));
         if (storedProducts) {
             console.log("Products from localStorage:", storedProducts);
         }
 
     }, [dispatch])
+
+    const firstProductPerCategory = products.reduce((acc, product) => {
+        if (!acc.some(item => item.category === product.category)) {
+            acc.push(product);
+        }
+        return acc;
+    }, []);
 
 
     let products_carousel = {
@@ -59,39 +62,6 @@ function Home(props) {
             }
         }
     }
-
-    let category_carousel = {
-        autoplay: true,
-        smartSpeed: 1500,
-        center: false,
-        dots: true,
-        loop: true,
-        margin: 25,
-        nav: true,
-        navText: [
-            '<div class="owl-prev"><i class="bi bi-arrow-left"></i></div>',
-            '<div class="owl-next"><i class="bi bi-arrow-right"></i></div>'
-        ],
-        responsiveClass: true,
-        responsive: {
-            0: {
-                items: 1
-            },
-            576: {
-                items: 1
-            },
-            768: {
-                items: 2
-            },
-            992: {
-                items: 3
-            },
-            1200: {
-                items: 4
-            }
-        }
-    }
-
 
     return (
         <div>
@@ -137,12 +107,20 @@ function Home(props) {
             <div className="container-fluid vesitable py-5">
                 <div className="container py-5">
                     <h2>Category List : </h2>
-                    <OwlCarousel {...category_carousel} className="owl-carousel vegetable-carousel justify-content-center">
+                    <OwlCarousel {...products_carousel} className="owl-carousel vegetable-carousel justify-content-center">
                         {
-                            category.map((v) => (
-                                <div className="border border-primary rounded position-relative vesitable-item">
+                            firstProductPerCategory.map((v) => (
+                                <div className="border border-primary rounded position-relative vesitable-item" key={v.id}>
+                                    <div className="vesitable-img">
+                                        <img src={v.images[0]} style={{ height: "200px" }} className="img-fluid w-100 rounded-top" alt="" />
+                                    </div>
                                     <div className="p-4 rounded-bottom">
-                                        <h4>{v.name}</h4>
+                                        <h5>Category: {v.category}</h5>
+                                        <h6>{v.title.length > 20 ? v.title.substring(0, 20) + "..." : v.title}</h6>
+                                        <p>{v.description.length > 40 ? v.description.substring(0, 40) + "..." : v.description}</p>
+                                        <div className="justify-content-between flex-lg-wrap">
+                                            <p className="text-dark fs-5 fw-bold mb-0">${v.price} / kg</p>
+                                        </div>
                                     </div>
                                 </div>
                             ))
@@ -158,19 +136,22 @@ function Home(props) {
                     <OwlCarousel {...products_carousel} className="owl-carousel vegetable-carousel justify-content-center">
                         {
                             products.map((v) => (
+                                <Link to={`/productDetail/${v.id}`}>
                                 <div className="border border-primary rounded position-relative vesitable-item">
                                     <div className="vesitable-img">
-                                        <img src={v.images} style={{ height: "200px" }} className="img-fluid w-100 rounded-top" alt />
+                                        <img src={v.images[0]} style={{ height: "200px" }} className="img-fluid w-100 rounded-top" alt />
                                     </div>
                                     <div className="p-4 rounded-bottom">
-                                        <h4>{v.title.length > 20 ? v.title.substring(0, 20) + "..." : v.title}</h4>
+                                        <h4>{v.title.length > 15 ? v.title.substring(0, 15) + "..." : v.title}</h4>
                                         <p>{v.description.length > 40 ? v.description.substring(0, 40) + "..." : v.description}</p>
-                                        <div className="d-flex justify-content-between flex-lg-wrap">
+                                        <div className="justify-content-between flex-lg-wrap">
                                             <p className="text-dark fs-5 fw-bold mb-0">${v.price} / kg</p>
-                                            <a href="#" className="btn border border-secondary rounded-pill px-3 text-primary"><i className="fa fa-shopping-bag me-2 text-primary" /> Add to cart</a>
+                                            <p className="text-dark mb-0"> rating : {v.rating}</p>
+                                            <p className="text-dark mb-0">Discount : {v.discountPercentage}%</p>
                                         </div>
                                     </div>
                                 </div>
+                                </Link>
                             ))
                         }
                     </OwlCarousel >

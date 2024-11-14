@@ -10,5 +10,4 @@ export const getproduct = () => async (dispatch) => {
     } catch (error) {
         console.log(error);
     }
-
 }

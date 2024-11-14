@@ -1,7 +1,8 @@
-import React, { useEffect } from 'react';
+import React, { useEffect, useState } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import { getproduct } from '../../../redux/action/product.action';
 import { Link } from 'react-router-dom';
+
 
 function Product(props) {
 
@@ -12,8 +13,63 @@ function Product(props) {
 
     useEffect(() => {
         dispatch(getproduct())
-
     }, [dispatch])
+
+    const [currentPage, setCurrentPage] = useState(1);
+    const productsPerPage = 9;
+    const [selectedCategory, setSelectedCategory] = useState("All");
+    const [searchData, setSearchData] = useState("");
+    const [sort, setSort] = useState("lh");
+
+    const filteredProducts = selectedCategory === "All"
+        ? products
+        : products.filter(product => product.category === selectedCategory);
+
+    const totalPages = Math.ceil(filteredProducts.length / productsPerPage);
+
+    const handlePageChange = (pageNumber) => {
+        setCurrentPage(pageNumber);
+    };
+
+    const indexOfLastProduct = currentPage * productsPerPage;
+    const indexOfFirstProduct = indexOfLastProduct - productsPerPage;
+    const currentProducts = filteredProducts.slice(indexOfFirstProduct, indexOfLastProduct);
+
+    const categoryCounts = products.reduce((acc, product) => {
+        const category = product.category;
+        if (acc[category]) {
+            acc[category]++;
+        } else {
+            acc[category] = 1;
+        }
+        return acc;
+    }, {});
+
+    const handleSearch = () => {
+        let Fdata = [];
+        Fdata = currentProducts.filter((v) => (
+            v.title.toLowerCase().includes(searchData.toLowerCase()) ||
+            v.price.toString().includes(searchData) ||
+            v.description.toLowerCase().includes(searchData.toLowerCase())
+        ))
+
+        Fdata.sort((a, b) => {
+            if (sort === 'lh') {
+                return a.price - b.price;
+            } else if (sort === 'hl') {
+                return b.price - a.price;
+            } else if (sort === 'az') {
+                return a.title.localeCompare(b.title);
+            } else if (sort === 'za') {
+                return b.title.localeCompare(a.title);
+            }
+        });
+
+
+        return Fdata
+    }
+
+    const finalData = handleSearch();
 
     return (
         <div>
@@ -54,7 +110,13 @@ function Product(props) {
                             <div className="row g-4">
                                 <div className="col-xl-3">
                                     <div className="input-group w-100 mx-auto d-flex">
-                                        <input type="search" className="form-control p-3" placeholder="keywords" aria-describedby="search-icon-1" />
+                                        <input
+                                            type="search"
+                                            className="form-control p-3"
+                                            placeholder="keywords"
+                                            aria-describedby="search-icon-1"
+                                            onChange={(event) => setSearchData(event.target.value)}
+                                        />
                                         <span id="search-icon-1" className="input-group-text p-3"><i className="fa fa-search" /></span>
                                     </div>
                                 </div>
@@ -62,11 +124,25 @@ function Product(props) {
                                 <div className="col-xl-3">
                                     <div className="bg-light ps-3 py-3 rounded d-flex justify-content-between mb-4">
                                         <label htmlFor="fruits">Default Sorting:</label>
-                                        <select id="fruits" name="fruitlist" className="border-0 form-select-sm bg-light me-3" form="fruitform">
-                                            <option value="volvo">Nothing</option>
-                                            <option value="saab">Popularity</option>
-                                            <option value="opel">Organic</option>
-                                            <option value="audi">Fantastic</option>
+                                        <select
+                                            id="fruits"
+                                            name="fruitlist"
+                                            className="border-0 form-select-sm bg-light me-3"
+                                            form="fruitform"
+                                            onChange={(event) => setSort(event.target.value)}
+                                        >
+                                            <option value="lh">
+                                                Price: Low to High
+                                            </option>
+                                            <option value="hl">
+                                                Price: High to Low
+                                            </option>
+                                            <option value="az">
+                                                Title: A to Z
+                                            </option>
+                                            <option value="za">
+                                                Title: Z to A
+                                            </option>
                                         </select>
                                     </div>
                                 </div>
@@ -79,35 +155,23 @@ function Product(props) {
                                                 <h4>Categories</h4>
                                                 <ul className="list-unstyled fruite-categorie">
                                                     <li>
-                                                        <div className="d-flex justify-content-between fruite-name">
-                                                            <a href="#"><i className="fas fa-apple-alt me-2" />Apples</a>
-                                                            <span>(3)</span>
+                                                        <div
+                                                            className="d-flex justify-content-between fruite-name"
+                                                            onClick={() => { setSelectedCategory("All"); setCurrentPage(1); }}>
+                                                            <a href="#"><i className="fas fa-apple-alt me-2" />All</a>
+                                                            <span>({products.length})</span>
                                                         </div>
                                                     </li>
-                                                    <li>
-                                                        <div className="d-flex justify-content-between fruite-name">
-                                                            <a href="#"><i className="fas fa-apple-alt me-2" />Oranges</a>
-                                                            <span>(5)</span>
-                                                        </div>
-                                                    </li>
-                                                    <li>
-                                                        <div className="d-flex justify-content-between fruite-name">
-                                                            <a href="#"><i className="fas fa-apple-alt me-2" />Strawbery</a>
-                                                            <span>(2)</span>
-                                                        </div>
-                                                    </li>
-                                                    <li>
-                                                        <div className="d-flex justify-content-between fruite-name">
-                                                            <a href="#"><i className="fas fa-apple-alt me-2" />Banana</a>
-                                                            <span>(8)</span>
-                                                        </div>
-                                                    </li>
-                                                    <li>
-                                                        <div className="d-flex justify-content-between fruite-name">
-                                                            <a href="#"><i className="fas fa-apple-alt me-2" />Pumpkin</a>
-                                                            <span>(5)</span>
-                                                        </div>
-                                                    </li>
+                                                    {Object.keys(categoryCounts).map((category) => (
+                                                        <li key={category}>
+                                                            <div
+                                                                className="d-flex justify-content-between fruite-name"
+                                                                onClick={() => { setSelectedCategory(category); setCurrentPage(1); }}>
+                                                                <a href="#"><i className="fas fa-apple-alt me-2" />{category}</a>
+                                                                <span>({categoryCounts[category]})</span>
+                                                            </div>
+                                                        </li>
+                                                    ))}
                                                 </ul>
                                             </div>
                                         </div>
@@ -146,7 +210,7 @@ function Product(props) {
                                         <div className="col-lg-12">
                                             <h4 className="mb-3">Featured products</h4>
                                             <div className="d-flex align-items-center justify-content-start">
-                                                <div className="rounded me-4" style={{ width: 100, height: 100 }}>
+                                                <div className="rounded me-4" style={{ width: 100 }}>
                                                     <img src="img/featur-1.jpg" className="img-fluid rounded" alt />
                                                 </div>
                                                 <div>
@@ -165,7 +229,7 @@ function Product(props) {
                                                 </div>
                                             </div>
                                             <div className="d-flex align-items-center justify-content-start">
-                                                <div className="rounded me-4" style={{ width: 100, height: 100 }}>
+                                                <div className="rounded me-4" style={{ width: 100 }}>
                                                     <img src="img/featur-2.jpg" className="img-fluid rounded" alt />
                                                 </div>
                                                 <div>
@@ -184,7 +248,7 @@ function Product(props) {
                                                 </div>
                                             </div>
                                             <div className="d-flex align-items-center justify-content-start">
-                                                <div className="rounded me-4" style={{ width: 100, height: 100 }}>
+                                                <div className="rounded me-4" style={{ width: 100 }}>
                                                     <img src="img/featur-3.jpg" className="img-fluid rounded" alt />
                                                 </div>
                                                 <div>
@@ -219,39 +283,40 @@ function Product(props) {
                                 <div className="col-lg-9">
                                     <div className="row g-4 justify-content-center">
                                         {
-                                            products.map((v) => (
-                                                <div className="col-md-6 col-lg-6 col-xl-4">
-                                                    <Link to={`/ProductDetail/${v.id}`}>
-                                                    <div className="rounded position-relative fruite-item">
-                                                        <div className="fruite-img">
-                                                            <img src={v.images}  style={{height : "200px"}} className="img-fluid w-100 rounded-top"  alt />
-                                                        </div>
-                                                        <div className="p-4 border border-secondary border-top-0 rounded-bottom">
-                                                            <h4>{v.title.length > 20 ? v.title.substring(0, 20) + "..." : v.title}</h4>
-                                                            <p>{v.description.length > 40 ? v.description.substring(0, 40) + "..." : v.description}</p>
-                                                            <div className="d-flex justify-content-between flex-lg-wrap">
-                                                                <p className="text-dark fs-5 fw-bold mb-0">${v.price} / kg</p>
-                                                                <a href="#" className="btn border border-secondary rounded-pill px-3 text-primary"><i className="fa fa-shopping-bag me-2 text-primary" /> Add to cart</a>
+                                            finalData.map((product) => (
+                                                <div key={product.id} className="col-md-6 col-lg-6 col-xl-4">
+                                                    <Link to={`/productDetail/${product.id}`}>
+                                                        <div className="rounded position-relative fruite-item">
+                                                            <div className="fruite-img">
+                                                                <img src={product.images[0]} style={{ height: "200px" }} className="img-fluid w-100 rounded-top" alt />
+                                                            </div>
+                                                            <div className="p-4 border border-secondary border-top-0 rounded-bottom">
+                                                                <h4>{product.title.length > 10 ? product.title.substring(0, 10) + "..." : product.title}</h4>
+                                                                <p>{product.description.length > 40 ? product.description.substring(0, 40) + "..." : product.description}</p>
+                                                                <div>
+                                                                    <p className="text-dark fs-5 fw-bold mb-2">${product.price} / kg</p>
+                                                                    <p className="text-dark mb-0">Rating: {product.rating}</p>
+                                                                    <p className="text-dark mb-0">Discount: {product.discountPercentage}%</p>
+                                                                    <p className="text-dark mb-0">Stock: {product.stock}</p>
+                                                                </div>
                                                             </div>
                                                         </div>
-                                                    </div>
                                                     </Link>
                                                 </div>
-                                            ))
-                                        }
-                                        <div className="col-12">
-                                            <div className="pagination d-flex justify-content-center mt-5">
-                                                <a href="#" className="rounded">«</a>
-                                                <a href="#" className="active rounded">1</a>
-                                                <a href="#" className="rounded">2</a>
-                                                <a href="#" className="rounded">3</a>
-                                                <a href="#" className="rounded">4</a>
-                                                <a href="#" className="rounded">5</a>
-                                                <a href="#" className="rounded">6</a>
-                                                <a href="#" className="rounded">»</a>
-                                            </div>
-                                        </div>
+                                            ))}
                                     </div>
+                                    {/* Pagination */}
+                                    <nav aria-label="Page navigation" className="mt-4">
+                                        <ul className="pagination d-flex justify-content-center">
+                                            {[...Array(totalPages).keys()].map(page => (
+                                                <li key={page + 1} className={`page-item px-2 ${currentPage === page + 1 ? 'active' : ''}`}>
+                                                    <button className="page-link" onClick={() => handlePageChange(page + 1)}>
+                                                        {page + 1}
+                                                    </button>
+                                                </li>
+                                            ))}
+                                        </ul>
+                                    </nav>
                                 </div>
                             </div>
                         </div>
@@ -265,3 +330,4 @@ function Product(props) {
 }
 
 export default Product;
+
