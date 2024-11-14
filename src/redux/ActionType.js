@@ -1,0 +1,4 @@
+export const GET_ALLPRODUCTS = "GET_ALLPRODUCT"
+
+export const GET_CATEGORY = "GET_CATEGORY"
+
