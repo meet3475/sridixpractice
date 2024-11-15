@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 import { useSelector } from 'react-redux';
 import { NavLink } from 'react-router-dom';
 
@@ -10,6 +10,9 @@ function Header(props) {
   const totalQtyData = cart.cart.reduce((acc, v) => acc + v.quantity, 0);
   console.log(totalQtyData);
 
+  useEffect(() => {
+    window.scrollTo(0, 0);
+  }, []);
 
   return (
     <div>
@@ -30,7 +33,7 @@ function Header(props) {
         </div>
         <div className="container px-0">
           <nav className="navbar navbar-expand-xl">
-            <a href="index.html" className="navbar-brand"><h1 className="text-primary display-6">Products</h1></a>
+            <a href="/" className="navbar-brand"><h1 className="text-primary display-6">Products</h1></a>
             <button className="navbar-toggler py-2 px-3" type="button" data-bs-toggle="collapse" data-bs-target="#navbarCollapse">
               <span className="fa fa-bars text-primary" />
             </button>

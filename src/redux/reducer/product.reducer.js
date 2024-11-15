@@ -1,4 +1,4 @@
-import { GET_ALLPRODUCTS } from "../ActionType";
+import { GET_ALLPRODUCTS, GET_CATEGORYLIST } from "../ActionType";
 
 
 const initialState = {

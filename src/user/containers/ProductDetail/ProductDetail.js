@@ -17,6 +17,9 @@ function ProductDetail(props) {
     const products = useSelector((state) => state.products.products) || [];
     const data = products.find((v) => Number(v.id) === Number(id));
 
+    const [buttonText, setButtonText] = useState("Add to Cart");
+    const cart = JSON.parse(localStorage.getItem('cart')) || [];
+
     useEffect(() => {
         dispatch(getproduct());
     }, [dispatch]);
@@ -24,8 +27,20 @@ function ProductDetail(props) {
     useEffect(() => {
         if (data) {
             setProductDetail(data);
+            const cartItem = cart.find((item) => Number(item.id) === Number(id));
+            if (cartItem) {
+                setCount(cartItem.quantity);
+                setButtonText("Update to Cart");
+            } else { 
+                setButtonText("Add to Cart");
+            }
+
         }
-    }, [data]);
+    }, [data, cart, id]);
+
+    useEffect(() => {
+        window.scrollTo(0, 0);
+    }, []);
 
     const productsCarouselSettings = {
         autoplay: true,
@@ -37,7 +52,7 @@ function ProductDetail(props) {
         nav: true,
         navText: [
             '<div class="owl-prev"><i class="bi bi-arrow-left"></i></div>',
-            '<div class="owl-next"><i class="bi bi-arrow-right"></i></div>'
+            '<div class="owl-next"><i class="bi bi-arrow-right"></i></div>',
         ],
         responsiveClass: true,
         responsive: {
@@ -69,7 +84,7 @@ function ProductDetail(props) {
         nav: true,
         navText: [
             '<div class="owl-prev"><i class="bi bi-arrow-left"></i></div>',
-            '<div class="owl-next"><i class="bi bi-arrow-right"></i></div>'
+            '<div class="owl-next"><i class="bi bi-arrow-right"></i></div>',
         ],
         responsiveClass: true,
         responsive: {
@@ -93,14 +108,44 @@ function ProductDetail(props) {
 
     const handleAddToCart = () => {
         dispatch(addToCart({ id, count }));
-        const currentCart = JSON.parse(localStorage.getItem('cart')) || [];
-        const updatedCart = [...currentCart, { id, quantity: count }];
+
+        const updatedCart = cart.map((item) =>
+            item.id === id ? { ...item, quantity: count } : item
+        );
+
+
+        if (!updatedCart.find((item) => item.id === id)) {
+            updatedCart.push({ id, quantity: count });
+        }
+
         localStorage.setItem('cart', JSON.stringify(updatedCart));
-        toast.success("Product Added!");
+        toast.success(buttonText === "Add to Cart" ? "Product Added!" : "Cart Updated!");
+        setButtonText("Update to Cart");
     };
 
-    const handlePlus = () => setCount(count + 1);
-    const handleminus = () => count > 1 && setCount(count - 1);
+
+    const handlePlus = () => {
+        console.log("plus done");
+        const newCount = count + 1;
+        setCount(newCount);
+        const updatedCart = cart.map((item) =>
+            Number(item.id) === Number(id) ? { ...item, quantity: newCount } : item
+        );
+        localStorage.setItem('cart', JSON.stringify(updatedCart));
+    }
+
+    const handleMinus = () => {
+        console.log("minus done");
+        if (count > 1) {
+            const newCount = count - 1;
+            setCount(newCount);
+    
+            const updatedCart = cart.map((item) =>
+                Number(item.id) === Number(id) ? { ...item, quantity: newCount } : item
+            );
+            localStorage.setItem('cart', JSON.stringify(updatedCart));
+        }
+    }
 
     return (
         <div>
@@ -124,7 +169,7 @@ function ProductDetail(props) {
                                         <a href="#">
                                             <img
                                                 src={productDetail.images[0]}
-                                                style={{height : "500px", width: "400px"}}
+                                                style={{ height: "500px", width: "400px" }}
                                                 className="img-fluid rounded mb-2"
                                                 alt="Main Product Image"
                                             />
@@ -147,7 +192,7 @@ function ProductDetail(props) {
                                     <p className="mb-4">{productDetail.description}</p>
                                     <div className="input-group quantity mb-5" style={{ width: 100 }}>
                                         <div className="input-group-btn">
-                                            <button onClick={handleminus} className="btn btn-sm btn-minus rounded-circle bg-light border">
+                                            <button onClick={handleMinus} className="btn btn-sm btn-minus rounded-circle bg-light border">
                                                 <i className="fa fa-minus" />
                                             </button>
                                         </div>
@@ -159,7 +204,7 @@ function ProductDetail(props) {
                                         </div>
                                     </div>
                                     <a onClick={handleAddToCart} href="#" className="btn border border-secondary rounded-pill px-4 py-2 mb-4 text-primary">
-                                        <i className="fa fa-shopping-bag me-2 text-primary" /> Add to cart
+                                        <i className="fa fa-shopping-bag me-2 text-primary" /> {buttonText}
                                     </a>
                                 </div>
                             </div>
@@ -188,7 +233,7 @@ function ProductDetail(props) {
 
             <div className="container-fluid vesitable">
                 <div className="container">
-                <OwlCarousel {...products_carousel} className="owl-carousel vegetable-carousel justify-content-center">
+                    <OwlCarousel {...products_carousel} className="owl-carousel vegetable-carousel justify-content-center">
                         {productDetail.images && productDetail.images.length > 0 ? (
                             productDetail.images.map((image, index) => (
                                 <div key={index} className="item">

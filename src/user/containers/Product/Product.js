@@ -1,29 +1,73 @@
 import React, { useEffect, useState } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import { getproduct } from '../../../redux/action/product.action';
-import { Link } from 'react-router-dom';
-
+import { Link, useLocation } from 'react-router-dom';
+import axios from 'axios';
 
 function Product(props) {
-
     const dispatch = useDispatch();
-
     const products = useSelector((state) => state.products.products) || [];
-    console.log(products);
-
-    useEffect(() => {
-        dispatch(getproduct())
-    }, [dispatch])
-
+    const location = useLocation(); 
+    const [categories, setCategories] = useState([]); // For dynamic categories
     const [currentPage, setCurrentPage] = useState(1);
-    const productsPerPage = 9;
+    const productsPerPage = 5;
     const [selectedCategory, setSelectedCategory] = useState("All");
     const [searchData, setSearchData] = useState("");
     const [sort, setSort] = useState("lh");
+    const [searchResults, setSearchResults] = useState([]);
+
+    useEffect(() => {
+        const query = new URLSearchParams(location.search).get('search');
+        if (query) {
+            setSearchData(query);
+        }
+    }, [location]);
+
+    useEffect(() => {
+        dispatch(getproduct());
+    }, [dispatch]);
+
+    useEffect(() => {
+        const fetchCategories = async () => {
+            try {
+                const response = await axios.get('https://dummyjson.com/products/category-list');
+                const allCategories = response.data; // Assuming API returns an array of categories
+
+                // Compute product count for each category
+                const categoryWithCounts = allCategories.map(category => {
+                    const count = products.filter(product => product.category === category).length;
+                    return { category, count };
+                });
+
+                // Filter out categories with zero products
+                const filteredCategories = categoryWithCounts.filter(cat => cat.count > 0);
+                setCategories(filteredCategories);
+            } catch (error) {
+                console.error("Error fetching categories:", error);
+            }
+        };
+        fetchCategories();
+    }, [products]);
+
 
     const filteredProducts = selectedCategory === "All"
         ? products
         : products.filter(product => product.category === selectedCategory);
+
+    const sortProducts = (data) => {
+        return data.sort((a, b) => {
+            if (sort === 'lh') {
+                return a.price - b.price;
+            } else if (sort === 'hl') {
+                return b.price - a.price;
+            } else if (sort === 'az') {
+                return a.title.localeCompare(b.title);
+            } else if (sort === 'za') {
+                return b.title.localeCompare(a.title);
+            }
+            return 0;
+        });
+    };
 
     const totalPages = Math.ceil(filteredProducts.length / productsPerPage);
 
@@ -35,76 +79,36 @@ function Product(props) {
     const indexOfFirstProduct = indexOfLastProduct - productsPerPage;
     const currentProducts = filteredProducts.slice(indexOfFirstProduct, indexOfLastProduct);
 
-    const categoryCounts = products.reduce((acc, product) => {
-        const category = product.category;
-        if (acc[category]) {
-            acc[category]++;
-        } else {
-            acc[category] = 1;
+    const handleSearch = async () => {
+        try {
+            const response = await axios.get(`https://dummyjson.com/products/search?q=${searchData}`);
+            const Fdata = response.data.products;
+            setSearchResults(sortProducts(Fdata));
+        } catch (error) {
+            console.error("Error fetching search results:", error);
         }
-        return acc;
-    }, {});
+    };
 
-    const handleSearch = () => {
-        let Fdata = [];
-        Fdata = currentProducts.filter((v) => (
-            v.title.toLowerCase().includes(searchData.toLowerCase()) ||
-            v.price.toString().includes(searchData) ||
-            v.description.toLowerCase().includes(searchData.toLowerCase())
-        ))
+    useEffect(() => {
+        if (searchData) {
+            handleSearch();
+        } else {
+            setSearchResults([]);
+        }
+    }, [searchData, sort]);
 
-        Fdata.sort((a, b) => {
-            if (sort === 'lh') {
-                return a.price - b.price;
-            } else if (sort === 'hl') {
-                return b.price - a.price;
-            } else if (sort === 'az') {
-                return a.title.localeCompare(b.title);
-            } else if (sort === 'za') {
-                return b.title.localeCompare(a.title);
-            }
-        });
+    const finalData = searchResults.length > 0 ? searchResults : sortProducts(currentProducts);
 
-
-        return Fdata
-    }
-
-    const finalData = handleSearch();
+    const capitalizeFirstLetter = (str) => {
+        return str.charAt(0).toUpperCase() + str.slice(1).toLowerCase();
+    };
 
     return (
         <div>
-            {/* Modal Search Start */}
-            <div className="modal fade" id="searchModal" tabIndex={-1} aria-labelledby="exampleModalLabel" aria-hidden="true">
-                <div className="modal-dialog modal-fullscreen">
-                    <div className="modal-content rounded-0">
-                        <div className="modal-header">
-                            <h5 className="modal-title" id="exampleModalLabel">Search by keyword</h5>
-                            <button type="button" className="btn-close" data-bs-dismiss="modal" aria-label="Close" />
-                        </div>
-                        <div className="modal-body d-flex align-items-center">
-                            <div className="input-group w-75 mx-auto d-flex">
-                                <input type="search" className="form-control p-3" placeholder="keywords" aria-describedby="search-icon-1" />
-                                <span id="search-icon-1" className="input-group-text p-3"><i className="fa fa-search" /></span>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-            {/* Modal Search End */}
-            {/* Single Page Header start */}
-            <div className="container-fluid page-header py-5">
-                <h1 className="text-center text-white display-6">Product</h1>
-                <ol className="breadcrumb justify-content-center mb-0">
-                    <li className="breadcrumb-item"><a href="#">Home</a></li>
-                    <li className="breadcrumb-item"><a href="#">Pages</a></li>
-                    <li className="breadcrumb-item active text-white">Product</li>
-                </ol>
-            </div>
-            {/* Single Page Header End */}
-            {/* Fruits Shop Start*/}
+            {/* Fruits Shop Start */}
             <div className="container-fluid fruite py-5">
                 <div className="container py-5">
-                    <h1 className="mb-4">Fresh fruits shop</h1>
+                    <h1 className="mt-4">Products Shop</h1>
                     <div className="row g-4">
                         <div className="col-lg-12">
                             <div className="row g-4">
@@ -131,18 +135,10 @@ function Product(props) {
                                             form="fruitform"
                                             onChange={(event) => setSort(event.target.value)}
                                         >
-                                            <option value="lh">
-                                                Price: Low to High
-                                            </option>
-                                            <option value="hl">
-                                                Price: High to Low
-                                            </option>
-                                            <option value="az">
-                                                Title: A to Z
-                                            </option>
-                                            <option value="za">
-                                                Title: Z to A
-                                            </option>
+                                            <option value="lh">Price: Low to High</option>
+                                            <option value="hl">Price: High to Low</option>
+                                            <option value="az">Title: A to Z</option>
+                                            <option value="za">Title: Z to A</option>
                                         </select>
                                     </div>
                                 </div>
@@ -162,148 +158,45 @@ function Product(props) {
                                                             <span>({products.length})</span>
                                                         </div>
                                                     </li>
-                                                    {Object.keys(categoryCounts).map((category) => (
+                                                    {categories.map(({ category, count }) => (
                                                         <li key={category}>
                                                             <div
                                                                 className="d-flex justify-content-between fruite-name"
                                                                 onClick={() => { setSelectedCategory(category); setCurrentPage(1); }}>
-                                                                <a href="#"><i className="fas fa-apple-alt me-2" />{category}</a>
-                                                                <span>({categoryCounts[category]})</span>
+                                                                <a href="#"><i className="fas fa-apple-alt me-2" />{capitalizeFirstLetter(category)}</a>
+                                                                <span>({count})</span>
                                                             </div>
                                                         </li>
                                                     ))}
                                                 </ul>
-                                            </div>
-                                        </div>
-                                        <div className="col-lg-12">
-                                            <div className="mb-3">
-                                                <h4 className="mb-2">Price</h4>
-                                                <input type="range" className="form-range w-100" id="rangeInput" name="rangeInput" min={0} max={500} defaultValue={0} oninput="amount.value=rangeInput.value" />
-                                                <output id="amount" name="amount" min-velue={0} max-value={500} htmlFor="rangeInput">0</output>
-                                            </div>
-                                        </div>
-                                        <div className="col-lg-12">
-                                            <div className="mb-3">
-                                                <h4>Additional</h4>
-                                                <div className="mb-2">
-                                                    <input type="radio" className="me-2" id="Categories-1" name="Categories-1" defaultValue="Beverages" />
-                                                    <label htmlFor="Categories-1"> Organic</label>
-                                                </div>
-                                                <div className="mb-2">
-                                                    <input type="radio" className="me-2" id="Categories-2" name="Categories-1" defaultValue="Beverages" />
-                                                    <label htmlFor="Categories-2"> Fresh</label>
-                                                </div>
-                                                <div className="mb-2">
-                                                    <input type="radio" className="me-2" id="Categories-3" name="Categories-1" defaultValue="Beverages" />
-                                                    <label htmlFor="Categories-3"> Sales</label>
-                                                </div>
-                                                <div className="mb-2">
-                                                    <input type="radio" className="me-2" id="Categories-4" name="Categories-1" defaultValue="Beverages" />
-                                                    <label htmlFor="Categories-4"> Discount</label>
-                                                </div>
-                                                <div className="mb-2">
-                                                    <input type="radio" className="me-2" id="Categories-5" name="Categories-1" defaultValue="Beverages" />
-                                                    <label htmlFor="Categories-5"> Expired</label>
-                                                </div>
-                                            </div>
-                                        </div>
-                                        <div className="col-lg-12">
-                                            <h4 className="mb-3">Featured products</h4>
-                                            <div className="d-flex align-items-center justify-content-start">
-                                                <div className="rounded me-4" style={{ width: 100 }}>
-                                                    <img src="img/featur-1.jpg" className="img-fluid rounded" alt />
-                                                </div>
-                                                <div>
-                                                    <h6 className="mb-2">Big Banana</h6>
-                                                    <div className="d-flex mb-2">
-                                                        <i className="fa fa-star text-secondary" />
-                                                        <i className="fa fa-star text-secondary" />
-                                                        <i className="fa fa-star text-secondary" />
-                                                        <i className="fa fa-star text-secondary" />
-                                                        <i className="fa fa-star" />
-                                                    </div>
-                                                    <div className="d-flex mb-2">
-                                                        <h5 className="fw-bold me-2">2.99 $</h5>
-                                                        <h5 className="text-danger text-decoration-line-through">4.11 $</h5>
-                                                    </div>
-                                                </div>
-                                            </div>
-                                            <div className="d-flex align-items-center justify-content-start">
-                                                <div className="rounded me-4" style={{ width: 100 }}>
-                                                    <img src="img/featur-2.jpg" className="img-fluid rounded" alt />
-                                                </div>
-                                                <div>
-                                                    <h6 className="mb-2">Big Banana</h6>
-                                                    <div className="d-flex mb-2">
-                                                        <i className="fa fa-star text-secondary" />
-                                                        <i className="fa fa-star text-secondary" />
-                                                        <i className="fa fa-star text-secondary" />
-                                                        <i className="fa fa-star text-secondary" />
-                                                        <i className="fa fa-star" />
-                                                    </div>
-                                                    <div className="d-flex mb-2">
-                                                        <h5 className="fw-bold me-2">2.99 $</h5>
-                                                        <h5 className="text-danger text-decoration-line-through">4.11 $</h5>
-                                                    </div>
-                                                </div>
-                                            </div>
-                                            <div className="d-flex align-items-center justify-content-start">
-                                                <div className="rounded me-4" style={{ width: 100 }}>
-                                                    <img src="img/featur-3.jpg" className="img-fluid rounded" alt />
-                                                </div>
-                                                <div>
-                                                    <h6 className="mb-2">Big Banana</h6>
-                                                    <div className="d-flex mb-2">
-                                                        <i className="fa fa-star text-secondary" />
-                                                        <i className="fa fa-star text-secondary" />
-                                                        <i className="fa fa-star text-secondary" />
-                                                        <i className="fa fa-star text-secondary" />
-                                                        <i className="fa fa-star" />
-                                                    </div>
-                                                    <div className="d-flex mb-2">
-                                                        <h5 className="fw-bold me-2">2.99 $</h5>
-                                                        <h5 className="text-danger text-decoration-line-through">4.11 $</h5>
-                                                    </div>
-                                                </div>
-                                            </div>
-                                            <div className="d-flex justify-content-center my-4">
-                                                <a href="#" className="btn border border-secondary px-4 py-3 rounded-pill text-primary w-100">Vew More</a>
-                                            </div>
-                                        </div>
-                                        <div className="col-lg-12">
-                                            <div className="position-relative">
-                                                <img src="img/banner-fruits.jpg" className="img-fluid w-100 rounded" alt />
-                                                <div className="position-absolute" style={{ top: '50%', right: 10, transform: 'translateY(-50%)' }}>
-                                                    <h3 className="text-secondary fw-bold">Fresh <br /> Fruits <br /> Banner</h3>
-                                                </div>
+
                                             </div>
                                         </div>
                                     </div>
                                 </div>
                                 <div className="col-lg-9">
                                     <div className="row g-4 justify-content-center">
-                                        {
-                                            finalData.map((product) => (
-                                                <div key={product.id} className="col-md-6 col-lg-6 col-xl-4">
-                                                    <Link to={`/productDetail/${product.id}`}>
-                                                        <div className="rounded position-relative fruite-item">
-                                                            <div className="fruite-img">
-                                                                <img src={product.images[0]} style={{ height: "200px" }} className="img-fluid w-100 rounded-top" alt />
-                                                            </div>
-                                                            <div className="p-4 border border-secondary border-top-0 rounded-bottom">
-                                                                <h4>{product.title.length > 10 ? product.title.substring(0, 10) + "..." : product.title}</h4>
-                                                                <p>{product.description.length > 40 ? product.description.substring(0, 40) + "..." : product.description}</p>
-                                                                <div>
-                                                                    <p className="text-dark fs-5 fw-bold mb-2">${product.price} / kg</p>
-                                                                    <p className="text-dark mb-0">Rating: {product.rating}</p>
-                                                                    <p className="text-dark mb-0">Discount: {product.discountPercentage}%</p>
-                                                                    <p className="text-dark mb-0">Stock: {product.stock}</p>
-                                                                </div>
+                                        {finalData.map((product) => (
+                                            <div key={product.id} className="col-md-6 col-lg-6 col-xl-4">
+                                                <Link to={`/productDetail/${product.id}`}>
+                                                    <div className="rounded position-relative fruite-item">
+                                                        <div className="fruite-img">
+                                                            <img src={product.images[0]} style={{ height: "200px" }} className="img-fluid w-100 rounded-top" alt={product.title} />
+                                                        </div>
+                                                        <div className="p-4 border border-secondary border-top-0 rounded-bottom">
+                                                            <h5>{product.title.length > 20 ? product.title.substring(0, 20) + "..." : product.title}</h5>
+                                                            <p>{product.description.length > 40 ? product.description.substring(0, 40) + "..." : product.description}</p>
+                                                            <div>
+                                                                <p className="text-dark fs-5 fw-bold mb-2">${product.price} / kg</p>
+                                                                <p className="text-dark mb-0">Rating: {product.rating}</p>
+                                                                <p className="text-dark mb-0">Discount: {product.discountPercentage}%</p>
+                                                                <p className="text-dark mb-0">Stock: {product.stock}</p>
                                                             </div>
                                                         </div>
-                                                    </Link>
-                                                </div>
-                                            ))}
+                                                    </div>
+                                                </Link>
+                                            </div>
+                                        ))}
                                     </div>
                                     {/* Pagination */}
                                     <nav aria-label="Page navigation" className="mt-4">
@@ -323,9 +216,8 @@ function Product(props) {
                     </div>
                 </div>
             </div>
-            {/* Fruits Shop End*/}
-        </div >
-
+            {/* Fruits Shop End */}
+        </div>
     );
 }
 

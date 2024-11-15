@@ -5,6 +5,7 @@ import { decrementQuantity, incrementQuantity, removeFromCart } from '../../../r
 import { ToastContainer, toast } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 import Swal from 'sweetalert2';
+import { Link } from 'react-router-dom';
 
 
 function Cart() {
@@ -22,6 +23,10 @@ function Cart() {
     useEffect(() => {
         dispatch(getproduct());
     }, [dispatch]);
+
+    useEffect(() => {
+        window.scrollTo(0, 0);
+    }, []);
 
     const handlePlus = (id) => {
         dispatch(incrementQuantity(Number(id)));
@@ -82,11 +87,15 @@ function Cart() {
                                         <tr key={v.id}>
                                             <th scope="row">
                                                 <div className="d-flex align-items-center">
-                                                    <img src={v.images && v.images[0] ? v.images[0] : ''} className="img-fluid me-5 rounded-circle" style={{ width: 80, height: 80 }} alt="" />
+                                                    <Link to={`/productDetail/${v.id}`}>
+                                                        <img src={v.images && v.images[0] ? v.images[0] : ''} className="img-fluid me-5 rounded-circle" style={{ width: 80, height: 80 }} alt="" />
+                                                    </Link>
                                                 </div>
                                             </th>
                                             <td>
-                                                <p className="mb-0 mt-4">{v.title}</p>
+                                                <Link to={`/productDetail/${v.id}`}>
+                                                    <p className="mb-0 mt-4">{v.title}</p>
+                                                </Link>
                                             </td>
                                             <td>
                                                 <p className="mb-0 mt-4">{v.price} $</p>

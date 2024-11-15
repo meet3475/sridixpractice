@@ -1,27 +1,44 @@
-import React, { useEffect } from 'react';
+import React, { useEffect, useState } from 'react';
 import OwlCarousel from 'react-owl-carousel';
 import 'owl.carousel/dist/assets/owl.carousel.css';
 import 'owl.carousel/dist/assets/owl.theme.default.css';
 import { useDispatch, useSelector } from 'react-redux';
 import { getproduct } from '../../../redux/action/product.action';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 
 
 function Home(props) {
 
     const dispatch = useDispatch();
-
+    const navigate = useNavigate();
     const products = useSelector((state) => state.products.products) || [];
     console.log(products);
 
+    const [searchData, setSearchData] = useState('');
+
+
     useEffect(() => {
         dispatch(getproduct())
-        const storedProducts = JSON.parse(localStorage.getItem("products"));
-        if (storedProducts) {
-            console.log("Products from localStorage:", storedProducts);
-        }
-
+        window.scrollTo(0, 0);
     }, [dispatch])
+
+    const handleSearch = async () => {
+
+        try {
+            const response = await fetch(`https://dummyjson.com/products/search?q=${searchData}`);
+            const data = await response.json();
+
+            if (searchData && data.products.length > 0) {
+                // Redirect to product results page with search results
+                navigate(`/product?search=${searchData}`);;
+            } else {
+                alert('No products found!');
+            }
+        } catch (error) {
+            console.error('Error fetching search results:', error);
+        }
+    };
+
 
     const firstProductPerCategory = products.reduce((acc, product) => {
         if (!acc.some(item => item.category === product.category)) {
@@ -29,6 +46,10 @@ function Home(props) {
         }
         return acc;
     }, []);
+
+    const capitalizeFirstLetter = (str) => {
+        return str.charAt(0).toUpperCase() + str.slice(1).toLowerCase();
+    };
 
 
     let products_carousel = {
@@ -41,7 +62,7 @@ function Home(props) {
         nav: true,
         navText: [
             '<div class="owl-prev"><i class="bi bi-arrow-left"></i></div>',
-            '<div class="owl-next"><i class="bi bi-arrow-right"></i></div>'
+            '<div class="owl-next"><i class="bi bi-arrow-right"></i></div>',
         ],
         responsiveClass: true,
         responsive: {
@@ -63,6 +84,7 @@ function Home(props) {
         }
     }
 
+
     return (
         <div>
             {/* Hero Start */}
@@ -73,8 +95,23 @@ function Home(props) {
                             <h4 className="mb-3 text-secondary">100% Organic Foods</h4>
                             <h1 className="mb-5 display-3 text-primary">Organic Veggies &amp; Fruits Foods</h1>
                             <div className="position-relative mx-auto">
-                                <input className="form-control border-2 border-secondary w-75 py-3 px-4 rounded-pill" type="number" placeholder="Search" />
-                                <button type="submit" className="btn btn-primary border-2 border-secondary py-3 px-4 position-absolute rounded-pill text-white h-100" style={{ top: 0, right: '25%' }}>Submit Now</button>
+
+                                <input
+                                    className="form-control border-2 border-secondary w-75 py-3 px-4 rounded-pill"
+                                    type="search"
+                                    placeholder="Search"
+                                    onChange={(e) => setSearchData(e.target.value)}
+                                    value={searchData}
+                                />
+                                <button
+                                    type="submit"
+                                    className="btn btn-primary border-2 border-secondary py-3 px-4 position-absolute rounded-pill text-white h-100"
+                                    style={{ top: 0, right: '25%' }}
+                                    onClick={handleSearch}
+                                >
+                                    Submit Now
+                                </button>
+
                             </div>
                         </div>
                         <div className="col-md-12 col-lg-5">
@@ -110,19 +147,21 @@ function Home(props) {
                     <OwlCarousel {...products_carousel} className="owl-carousel vegetable-carousel justify-content-center">
                         {
                             firstProductPerCategory.map((v) => (
-                                <div className="border border-primary rounded position-relative vesitable-item" key={v.id}>
-                                    <div className="vesitable-img">
-                                        <img src={v.images[0]} style={{ height: "200px" }} className="img-fluid w-100 rounded-top" alt="" />
-                                    </div>
-                                    <div className="p-4 rounded-bottom">
-                                        <h5>Category: {v.category}</h5>
-                                        <h6>{v.title.length > 20 ? v.title.substring(0, 20) + "..." : v.title}</h6>
-                                        <p>{v.description.length > 40 ? v.description.substring(0, 40) + "..." : v.description}</p>
-                                        <div className="justify-content-between flex-lg-wrap">
-                                            <p className="text-dark fs-5 fw-bold mb-0">${v.price} / kg</p>
+                                <Link to={`/product`}>
+                                    <div className="border border-primary rounded position-relative vesitable-item" key={v.id}>
+                                        <div className="vesitable-img">
+                                            <img src={v.images[0]} style={{ height: "200px" }} className="img-fluid w-100 rounded-top" alt="" />
+                                        </div>
+                                        <div className="p-4 rounded-bottom">
+                                            <h5>Category: {capitalizeFirstLetter(v.category)}</h5>
+                                            <h6>{v.title.length > 20 ? v.title.substring(0, 20) + "..." : v.title}</h6>
+                                            <p>{v.description.length > 40 ? v.description.substring(0, 40) + "..." : v.description}</p>
+                                            <div className="justify-content-between flex-lg-wrap">
+                                                <p className="text-dark fs-5 fw-bold mb-0">${v.price} / kg</p>
+                                            </div>
                                         </div>
                                     </div>
-                                </div>
+                                </Link>
                             ))
                         }
                     </OwlCarousel >
@@ -137,20 +176,20 @@ function Home(props) {
                         {
                             products.map((v) => (
                                 <Link to={`/productDetail/${v.id}`}>
-                                <div className="border border-primary rounded position-relative vesitable-item">
-                                    <div className="vesitable-img">
-                                        <img src={v.images[0]} style={{ height: "200px" }} className="img-fluid w-100 rounded-top" alt />
-                                    </div>
-                                    <div className="p-4 rounded-bottom">
-                                        <h4>{v.title.length > 15 ? v.title.substring(0, 15) + "..." : v.title}</h4>
-                                        <p>{v.description.length > 40 ? v.description.substring(0, 40) + "..." : v.description}</p>
-                                        <div className="justify-content-between flex-lg-wrap">
-                                            <p className="text-dark fs-5 fw-bold mb-0">${v.price} / kg</p>
-                                            <p className="text-dark mb-0"> rating : {v.rating}</p>
-                                            <p className="text-dark mb-0">Discount : {v.discountPercentage}%</p>
+                                    <div className="border border-primary rounded position-relative vesitable-item">
+                                        <div className="vesitable-img">
+                                            <img src={v.images[0]} style={{ height: "200px" }} className="img-fluid w-100 rounded-top" alt />
+                                        </div>
+                                        <div className="p-4 rounded-bottom">
+                                            <h4>{v.title.length > 15 ? v.title.substring(0, 15) + "..." : v.title}</h4>
+                                            <p>{v.description.length > 40 ? v.description.substring(0, 40) + "..." : v.description}</p>
+                                            <div className="justify-content-between flex-lg-wrap">
+                                                <p className="text-dark fs-5 fw-bold mb-0">${v.price} / kg</p>
+                                                <p className="text-dark mb-0"> rating : {v.rating}</p>
+                                                <p className="text-dark mb-0">Discount : {v.discountPercentage}%</p>
+                                            </div>
                                         </div>
                                     </div>
-                                </div>
                                 </Link>
                             ))
                         }

@@ -1,5 +1,5 @@
 import axios from "axios";
-import { GET_ALLPRODUCTS } from "../ActionType";
+import { GET_ALLPRODUCTS, GET_CATEGORYLIST } from "../ActionType";
 
 export const getproduct = () => async (dispatch) => {
     try {
@@ -11,3 +11,5 @@ export const getproduct = () => async (dispatch) => {
         console.log(error);
     }
 }
+
+

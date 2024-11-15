@@ -7,6 +7,7 @@ import Product from '../../user/containers/Product/Product';
 import Cart from '../../user/containers/Cart/Cart';
 import ProductDetail from '../../user/containers/ProductDetail/ProductDetail';
 
+
 function UserRoutes(props) {
     return (
         <div>
