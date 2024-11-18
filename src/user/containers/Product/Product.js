@@ -7,8 +7,8 @@ import axios from 'axios';
 function Product(props) {
     const dispatch = useDispatch();
     const products = useSelector((state) => state.products.products) || [];
-    const location = useLocation(); 
-    const [categories, setCategories] = useState([]); // For dynamic categories
+    const location = useLocation();
+    const [categories, setCategories] = useState([]); 
     const [currentPage, setCurrentPage] = useState(1);
     const productsPerPage = 5;
     const [selectedCategory, setSelectedCategory] = useState("All");
@@ -28,18 +28,21 @@ function Product(props) {
     }, [dispatch]);
 
     useEffect(() => {
+        window.scrollTo(0, 0);
+      }, []);
+
+    useEffect(() => {
         const fetchCategories = async () => {
             try {
                 const response = await axios.get('https://dummyjson.com/products/category-list');
-                const allCategories = response.data; // Assuming API returns an array of categories
+                const allCategories = response.data;
 
-                // Compute product count for each category
                 const categoryWithCounts = allCategories.map(category => {
                     const count = products.filter(product => product.category === category).length;
                     return { category, count };
                 });
 
-                // Filter out categories with zero products
+                
                 const filteredCategories = categoryWithCounts.filter(cat => cat.count > 0);
                 setCategories(filteredCategories);
             } catch (error) {
@@ -105,8 +108,18 @@ function Product(props) {
 
     return (
         <div>
+            {/* Single Page Header start */}
+            <div className="container-fluid page-header py-5">
+                <h1 className="text-center text-white display-6">Products</h1>
+                <ol className="breadcrumb justify-content-center mb-0">
+                    <li className="breadcrumb-item"><a href="#">Home</a></li>
+                    <li className="breadcrumb-item"><a href="#">Pages</a></li>
+                    <li className="breadcrumb-item active text-white">Products</li>
+                </ol>
+            </div>
+            {/* Single Page Header End */}
             {/* Fruits Shop Start */}
-            <div className="container-fluid fruite py-5">
+            <div className="container-fluid fruite">
                 <div className="container py-5">
                     <h1 className="mt-4">Products Shop</h1>
                     <div className="row g-4">

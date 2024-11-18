@@ -44,7 +44,6 @@ function Header(props) {
                 <NavLink to='/cart' className="nav-item nav-link">Cart</NavLink>
               </div>
               <div className="d-flex m-3 me-0 align-items-center">
-                <button className="btn-search btn border border-secondary btn-md-square rounded-circle bg-white me-4" data-bs-toggle="modal" data-bs-target="#searchModal"><i className="fas fa-search text-primary" /></button>
                 <NavLink to={`/cart`} className="position-relative me-4 my-auto">
                   <i className="fa fa-shopping-bag fa-2x" />
                   <span
