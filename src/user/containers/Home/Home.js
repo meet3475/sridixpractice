@@ -175,7 +175,7 @@ function Home(props) {
                     <OwlCarousel {...products_carousel} className="owl-carousel vegetable-carousel justify-content-center">
                         {
                             products.map((v) => (
-                                <Link to={`/productDetail/${v.id}`}>
+                                <Link to={`/productdetail/${v.id}`}>
                                     <div className="border border-primary rounded position-relative vesitable-item">
                                         <div className="vesitable-img">
                                             <img src={v.images[0]} style={{ height: "200px" }} className="img-fluid w-100 rounded-top" alt />

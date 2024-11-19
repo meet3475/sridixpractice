@@ -253,7 +253,7 @@ function Product(props) {
                                     <div className="row g-4 justify-content-center">
                                         {finalData.map((product) => (
                                             <div key={product.id} className="col-md-6 col-lg-6 col-xl-4">
-                                                <Link to={`/productDetail/${product.id}`}>
+                                                <Link to={`/productdetail/${product.id}`}>
                                                     <div className="rounded position-relative fruite-item">
                                                         <div className="fruite-img">
                                                             <img src={product.images[0]} style={{ height: "200px" }} className="img-fluid w-100 rounded-top" alt={product.title} />

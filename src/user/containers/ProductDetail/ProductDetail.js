@@ -102,7 +102,7 @@ function ProductDetail(props) {
         }
     }
 
-    
+
 
     return (
         <div>
@@ -120,7 +120,7 @@ function ProductDetail(props) {
                 <div className="container">
                     <div className="row g-4 mb-3">
                         <div className="col-lg-6">
-                            <Slider asNavFor={nav2} ref={slider => (sliderRef1 = slider)}  infinite={false}>
+                            <Slider asNavFor={nav2} ref={slider => (sliderRef1 = slider)} infinite={false}>
                                 {productDetail.images && productDetail.images.length > 0 ? (
                                     productDetail.images.map((image, index) => (
                                         <div key={index} className="item">
@@ -181,7 +181,7 @@ function ProductDetail(props) {
                             <Slider
                                 asNavFor={nav1}
                                 ref={slider => (sliderRef2 = slider)}
-                                slidesToShow={ productDetail.images && productDetail.images.length > 1 ? productDetail.images.length : 1}
+                                slidesToShow={3} 
                                 focusOnSelect={true}
                                 infinite={false}
                             >
@@ -196,12 +196,16 @@ function ProductDetail(props) {
                                             />
                                         </div>
                                     ))
-                                ) : (
-                                    <div className="item">
-                                        <img src="path/to/default/image.jpg" className="img-fluid rounded" alt="Default Product" />
+                                ) : null}
+
+                                {/* Blank slides ke liye */}
+                                {Array.from({ length: 3 - (productDetail.images ? productDetail.images.length : 0) }).map((_, index) => (
+                                    <div key={`blank-${index}`} className="item">
+                                        {/* Aap yahan blank styling add kar sakte hain */}
                                     </div>
-                                )}
+                                ))}
                             </Slider>
+
 
                         </div>
 
