@@ -1,16 +1,20 @@
 import React, { useEffect, useState } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import { getproduct } from '../../../redux/action/product.action';
-import { Link, useLocation } from 'react-router-dom';
+import { Link, useLocation, useNavigate, useParams } from 'react-router-dom';
 import axios from 'axios';
+import { GET_ALLPRODUCTS } from '../../../redux/ActionType';
 
 function Product(props) {
     const dispatch = useDispatch();
+    const navigate = useNavigate(); // Initialize navigate
+    const { category } = useParams(); // Get category from URL
+
     const products = useSelector((state) => state.products.products) || [];
     const location = useLocation();
-    const [categories, setCategories] = useState([]); 
+    const [categories, setCategories] = useState([]);
     const [currentPage, setCurrentPage] = useState(1);
-    const productsPerPage = 5;
+    const [productsPerPage, setProductsPerPage] = useState(6);
     const [selectedCategory, setSelectedCategory] = useState("All");
     const [searchData, setSearchData] = useState("");
     const [sort, setSort] = useState("lh");
@@ -24,12 +28,41 @@ function Product(props) {
     }, [location]);
 
     useEffect(() => {
+        const fetchProducts = async () => {
+            try {
+                let response;
+                if (selectedCategory === "All") {
+                    response = await axios.get("https://dummyjson.com/products");
+                    setCategories([]);
+                } else {
+                    response = await axios.get(`https://dummyjson.com/products/category/${selectedCategory}`);
+                }
+
+                const fetchedProducts = response.data.products || response.data;
+                dispatch({ type: GET_ALLPRODUCTS, payload: fetchedProducts });
+            } catch (error) {
+                console.error("Error fetching products:", error);
+            }
+        };
+
+        fetchProducts();
+    }, [selectedCategory, dispatch]);
+
+
+    useEffect(() => {
         dispatch(getproduct());
     }, [dispatch]);
 
     useEffect(() => {
         window.scrollTo(0, 0);
-      }, []);
+    }, []);
+
+    useEffect(() => {
+        if (category) {
+            setSelectedCategory(category);
+        }
+    }, [category]);
+
 
     useEffect(() => {
         const fetchCategories = async () => {
@@ -42,9 +75,7 @@ function Product(props) {
                     return { category, count };
                 });
 
-                
-                const filteredCategories = categoryWithCounts.filter(cat => cat.count > 0);
-                setCategories(filteredCategories);
+                setCategories(categoryWithCounts);
             } catch (error) {
                 console.error("Error fetching categories:", error);
             }
@@ -87,6 +118,7 @@ function Product(props) {
             const response = await axios.get(`https://dummyjson.com/products/search?q=${searchData}`);
             const Fdata = response.data.products;
             setSearchResults(sortProducts(Fdata));
+
         } catch (error) {
             console.error("Error fetching search results:", error);
         }
@@ -104,6 +136,22 @@ function Product(props) {
 
     const capitalizeFirstLetter = (str) => {
         return str.charAt(0).toUpperCase() + str.slice(1).toLowerCase();
+    };
+
+    const handleCategoryChange = (category) => {
+        setSelectedCategory(category);
+        navigate(`/product/category/${category}`);
+    };
+
+    const handleProductsPerPageChange = (event) => {
+        setProductsPerPage(Number(event.target.value));
+        setCurrentPage(1);
+    };
+
+    const getCategoryClass = (category) => {
+        return selectedCategory === category
+            ? "bg-warning text-success"  
+            : "";
     };
 
     return (
@@ -130,14 +178,30 @@ function Product(props) {
                                         <input
                                             type="search"
                                             className="form-control p-3"
-                                            placeholder="keywords"
+                                            placeholder="Search Products"
                                             aria-describedby="search-icon-1"
                                             onChange={(event) => setSearchData(event.target.value)}
                                         />
                                         <span id="search-icon-1" className="input-group-text p-3"><i className="fa fa-search" /></span>
                                     </div>
                                 </div>
-                                <div className="col-6" />
+                                <div className="col-xl-3">
+                                    <div className="bg-light ps-3 py-3 rounded d-flex justify-content-between mb-4">
+                                        <label htmlFor="productsPerPage">Products Per Page:</label>
+                                        <select
+                                            id="productsPerPage"
+                                            name="productsPerPage"
+                                            className="border-0 form-select-sm bg-light me-3"
+                                            onChange={handleProductsPerPageChange}
+                                        >
+                                            <option value="6">6</option>
+                                            <option value="9">9</option>
+                                            <option value="12">12</option>
+                                            <option value="15">15</option>
+                                        </select>
+                                    </div>
+                                </div>
+                                <div className="col-3" />
                                 <div className="col-xl-3">
                                     <div className="bg-light ps-3 py-3 rounded d-flex justify-content-between mb-4">
                                         <label htmlFor="fruits">Default Sorting:</label>
@@ -165,19 +229,17 @@ function Product(props) {
                                                 <ul className="list-unstyled fruite-categorie">
                                                     <li>
                                                         <div
-                                                            className="d-flex justify-content-between fruite-name"
-                                                            onClick={() => { setSelectedCategory("All"); setCurrentPage(1); }}>
+                                                            className={`d-flex justify-content-between fruite-name ${getCategoryClass("All")}`}
+                                                            onClick={() => handleCategoryChange("All")}>
                                                             <a href="#"><i className="fas fa-apple-alt me-2" />All</a>
-                                                            <span>({products.length})</span>
                                                         </div>
                                                     </li>
-                                                    {categories.map(({ category, count }) => (
+                                                    {categories.map(({ category}) => (
                                                         <li key={category}>
                                                             <div
-                                                                className="d-flex justify-content-between fruite-name"
-                                                                onClick={() => { setSelectedCategory(category); setCurrentPage(1); }}>
+                                                                className={`d-flex justify-content-between fruite-name ${getCategoryClass(category)}`}
+                                                                onClick={() => handleCategoryChange(category)}>
                                                                 <a href="#"><i className="fas fa-apple-alt me-2" />{capitalizeFirstLetter(category)}</a>
-                                                                <span>({count})</span>
                                                             </div>
                                                         </li>
                                                     ))}
@@ -214,11 +276,13 @@ function Product(props) {
                                     {/* Pagination */}
                                     <nav aria-label="Page navigation" className="mt-4">
                                         <ul className="pagination d-flex justify-content-center">
-                                            {[...Array(totalPages).keys()].map(page => (
-                                                <li key={page + 1} className={`page-item px-2 ${currentPage === page + 1 ? 'active' : ''}`}>
-                                                    <button className="page-link" onClick={() => handlePageChange(page + 1)}>
-                                                        {page + 1}
-                                                    </button>
+                                            {Array.from({ length: totalPages }, (_, index) => (
+                                                <li
+                                                    key={index + 1}
+                                                    className={`page-item  ${currentPage === index + 1 ? "active" : ""}`}
+                                                    onClick={() => handlePageChange(index + 1)}
+                                                >
+                                                    <a className="page-link" href="#">{index + 1}</a>
                                                 </li>
                                             ))}
                                         </ul>

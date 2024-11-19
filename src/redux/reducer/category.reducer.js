@@ -3,11 +3,11 @@ import { GET_ALLPRODUCTS} from "../ActionType";
 
 const initialState = {
     isLoading: false,
-    products: [],
+    categories: [],
     error: null
 }
 
-export const productReducer = (state = initialState, action) => {
+export const categoriesReducer = (state = initialState, action) => {
     console.log(action);
 
     switch (action.type) {
@@ -15,7 +15,7 @@ export const productReducer = (state = initialState, action) => {
         case GET_ALLPRODUCTS:
             return {
                 isLoading: false,
-                products: action.payload,
+                categories: action.payload,
                 error: null
             }
 

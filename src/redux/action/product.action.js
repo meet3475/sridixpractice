@@ -1,5 +1,5 @@
 import axios from "axios";
-import { GET_ALLPRODUCTS, GET_CATEGORYLIST } from "../ActionType";
+import { GET_ALLPRODUCTS} from "../ActionType";
 
 export const getproduct = () => async (dispatch) => {
     try {

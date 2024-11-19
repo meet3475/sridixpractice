@@ -7,8 +7,9 @@ function Header(props) {
   const cart = useSelector(state => state.cart)
   console.log(cart);
 
-  const totalQtyData = cart.cart.reduce((acc, v) => acc + v.quantity, 0);
-  console.log(totalQtyData);
+  const totalCartCount = cart.cart.length;
+  console.log(totalCartCount);
+
 
   useEffect(() => {
     window.scrollTo(0, 0);
@@ -50,7 +51,7 @@ function Header(props) {
                     className="position-absolute bg-secondary rounded-circle d-flex align-items-center justify-content-center text-dark px-1"
                     style={{ top: '-5px', left: 15, height: 20, minWidth: 20 }}
                   >
-                    {totalQtyData}
+                    {totalCartCount}
                   </span>
                 </NavLink>
               </div>

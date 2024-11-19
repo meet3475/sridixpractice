@@ -12,6 +12,8 @@ function Cart() {
     const dispatch = useDispatch();
     const products = useSelector((state) => state.products.products) || [];
     const cart = useSelector(state => state.cart);
+    console.log(cart);
+    
 
     const cartData = cart.cart.map((v) => {
         const productData = products.find((v1) => Number(v1.id) === Number(v.id));
