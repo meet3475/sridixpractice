@@ -7,11 +7,10 @@ import { GET_ALLPRODUCTS } from '../../../redux/ActionType';
 
 function Product(props) {
     const dispatch = useDispatch();
-    const navigate = useNavigate(); // Initialize navigate
-    const { category } = useParams(); // Get category from URL
+    const navigate = useNavigate(); 
+    const location = useLocation();
 
     const products = useSelector((state) => state.products.products) || [];
-    const location = useLocation();
     const [categories, setCategories] = useState([]);
     const [currentPage, setCurrentPage] = useState(1);
     const [productsPerPage, setProductsPerPage] = useState(6);
@@ -21,11 +20,9 @@ function Product(props) {
     const [searchResults, setSearchResults] = useState([]);
 
     useEffect(() => {
-        const query = new URLSearchParams(location.search).get('search');
-        if (query) {
-            setSearchData(query);
-        }
-    }, [location]);
+        const query = new URLSearchParams(location.search).get('category') || 'All';
+        setSelectedCategory(query); 
+    }, [location.search]);
 
     useEffect(() => {
         const fetchProducts = async () => {
@@ -33,7 +30,7 @@ function Product(props) {
                 let response;
                 if (selectedCategory === "All") {
                     response = await axios.get("https://dummyjson.com/products");
-                    setCategories([]);
+                    setCategories([]); 
                 } else {
                     response = await axios.get(`https://dummyjson.com/products/category/${selectedCategory}`);
                 }
@@ -48,7 +45,6 @@ function Product(props) {
         fetchProducts();
     }, [selectedCategory, dispatch]);
 
-
     useEffect(() => {
         dispatch(getproduct());
     }, [dispatch]);
@@ -56,13 +52,6 @@ function Product(props) {
     useEffect(() => {
         window.scrollTo(0, 0);
     }, []);
-
-    useEffect(() => {
-        if (category) {
-            setSelectedCategory(category);
-        }
-    }, [category]);
-
 
     useEffect(() => {
         const fetchCategories = async () => {
@@ -82,7 +71,6 @@ function Product(props) {
         };
         fetchCategories();
     }, [products]);
-
 
     const filteredProducts = selectedCategory === "All"
         ? products
@@ -118,7 +106,6 @@ function Product(props) {
             const response = await axios.get(`https://dummyjson.com/products/search?q=${searchData}`);
             const Fdata = response.data.products;
             setSearchResults(sortProducts(Fdata));
-
         } catch (error) {
             console.error("Error fetching search results:", error);
         }
@@ -140,7 +127,7 @@ function Product(props) {
 
     const handleCategoryChange = (category) => {
         setSelectedCategory(category);
-        navigate(`/product/category/${category}`);
+        navigate(`/product?category=${category}`); 
     };
 
     const handleProductsPerPageChange = (event) => {
@@ -149,9 +136,7 @@ function Product(props) {
     };
 
     const getCategoryClass = (category) => {
-        return selectedCategory === category
-            ? "bg-warning text-success"  
-            : "";
+        return selectedCategory === category ? "bg-warning text-success" : "";
     };
 
     return (
@@ -166,6 +151,7 @@ function Product(props) {
                 </ol>
             </div>
             {/* Single Page Header End */}
+
             {/* Fruits Shop Start */}
             <div className="container-fluid fruite">
                 <div className="container py-5">
@@ -234,7 +220,7 @@ function Product(props) {
                                                             <a href="#"><i className="fas fa-apple-alt me-2" />All</a>
                                                         </div>
                                                     </li>
-                                                    {categories.map(({ category}) => (
+                                                    {categories.map(({ category }) => (
                                                         <li key={category}>
                                                             <div
                                                                 className={`d-flex justify-content-between fruite-name ${getCategoryClass(category)}`}
@@ -244,7 +230,6 @@ function Product(props) {
                                                         </li>
                                                     ))}
                                                 </ul>
-
                                             </div>
                                         </div>
                                     </div>
@@ -273,12 +258,11 @@ function Product(props) {
                                             </div>
                                         ))}
                                     </div>
-                                    {/* Pagination */}
+                                    {/* Pagination (can be added if needed) */}
                                     <nav aria-label="Page navigation" className="mt-4">
                                         <ul className="pagination d-flex justify-content-center">
                                             {Array.from({ length: totalPages }, (_, index) => (
-                                                <li
-                                                    key={index + 1}
+                                                <li key={index + 1}
                                                     className={`page-item  ${currentPage === index + 1 ? "active" : ""}`}
                                                     onClick={() => handlePageChange(index + 1)}
                                                 >
@@ -299,4 +283,3 @@ function Product(props) {
 }
 
 export default Product;
-

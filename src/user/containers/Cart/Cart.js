@@ -5,15 +5,16 @@ import { decrementQuantity, incrementQuantity, removeFromCart } from '../../../r
 import { ToastContainer, toast } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 import Swal from 'sweetalert2';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 
 
 function Cart() {
     const dispatch = useDispatch();
+    const navigate = useNavigate();
     const products = useSelector((state) => state.products.products) || [];
     const cart = useSelector(state => state.cart);
     console.log(cart);
-    
+
 
     const cartData = cart.cart.map((v) => {
         const productData = products.find((v1) => Number(v1.id) === Number(v.id));
@@ -56,6 +57,24 @@ function Cart() {
                 toast.info("Item not removed.");
             }
         });
+    };
+
+    const handleCheckout = () => {
+        const loggedInUser = JSON.parse(localStorage.getItem('loggedInUser'));
+        if (!loggedInUser) {
+            Swal.fire({
+                title: 'Login Required',
+                text: 'You must log in to proceed to checkout.',
+                icon: 'warning',
+                confirmButtonText: 'Login Now',
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    navigate('/authform'); 
+                }
+            });
+        } else {
+            navigate('/'); 
+        }
     };
 
     return (
@@ -153,7 +172,13 @@ function Cart() {
                                     <h5 className="mb-0 ps-4 me-4">Total</h5>
                                     <p className="mb-0 pe-4">${(totalAmt + 100).toFixed(2)}</p>
                                 </div>
-                                <button className="btn border-secondary rounded-pill px-4 py-3 text-primary text-uppercase mb-4 ms-4" type="button">Proceed Checkout</button>
+                                <button
+                                    className="btn border-secondary rounded-pill px-4 py-3 text-primary text-uppercase mb-4 ms-4"
+                                    type="button"
+                                    onClick={handleCheckout}
+                                >
+                                    Proceed Checkout
+                                </button>
                             </div>
                         </div>
                     </div>

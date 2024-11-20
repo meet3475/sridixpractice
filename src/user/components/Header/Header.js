@@ -1,19 +1,32 @@
-import React, { useEffect } from 'react';
+import React, { useEffect, useState } from 'react';
 import { useSelector } from 'react-redux';
-import { NavLink } from 'react-router-dom';
+import { NavLink, useNavigate } from 'react-router-dom';
 
 function Header(props) {
-
-  const cart = useSelector(state => state.cart)
-  console.log(cart);
+  const cart = useSelector(state => state.cart);
+  const navigate = useNavigate();
 
   const totalCartCount = cart.cart.length;
-  console.log(totalCartCount);
-
+  
+  const [isLoggedIn, setIsLoggedIn] = useState(false);
+  const [dropdownVisible, setDropdownVisible] = useState(false);
+  const [user, setUser] = useState(null);
 
   useEffect(() => {
+    const loggedInUser = JSON.parse(localStorage.getItem('loggedInUser'));
+    if (loggedInUser) {
+      setIsLoggedIn(true);
+      setUser(loggedInUser);
+    }
     window.scrollTo(0, 0);
   }, []);
+
+  const handleLogout = () => {
+    localStorage.removeItem('loggedInUser');
+    setIsLoggedIn(false);
+    setUser(null);
+    navigate("/");
+  };
 
   return (
     <div>
@@ -38,11 +51,32 @@ function Header(props) {
             <button className="navbar-toggler py-2 px-3" type="button" data-bs-toggle="collapse" data-bs-target="#navbarCollapse">
               <span className="fa fa-bars text-primary" />
             </button>
-            <div className={`collapse navbar-collapse `} id="navbarCollapse">
+            <div className={`collapse navbar-collapse`} id="navbarCollapse">
               <div className={`navbar-nav mx-auto`}>
                 <NavLink to='/' className="nav-item nav-link active">Home</NavLink>
                 <NavLink to='/product' className="nav-item nav-link">Product</NavLink>
                 <NavLink to='/cart' className="nav-item nav-link">Cart</NavLink>
+
+                {!isLoggedIn ? (
+                  <NavLink to='/authform' className="nav-item nav-link">Login/Signup</NavLink>
+                ) : (
+                  <div className="d-flex m-3 me-0 align-items-center">
+                    <div className="position-relative me-4 my-auto">
+                      <i className="fas fa-user fa-2x" onClick={() => setDropdownVisible(!dropdownVisible)} />
+                      {
+                        dropdownVisible && (
+                          <div className="dropdown-menu show" style={{ position: 'absolute', top: '40px' }}>
+                            <div className="dropdown-item">Name: {user.name}</div>
+                            <div className="dropdown-item">Email: {user.email}</div>
+                            <div className="dropdown-item">Mobile: {user.moblie}</div>
+                            <div className="dropdown-item">Address: {user.address}</div>
+                            <div className="dropdown-item text-danger" onClick={handleLogout}>Logout</div>
+                          </div>
+                        )
+                      }
+                    </div>
+                  </div>
+                )}
               </div>
               <div className="d-flex m-3 me-0 align-items-center">
                 <NavLink to={`/cart`} className="position-relative me-4 my-auto">
@@ -55,30 +89,11 @@ function Header(props) {
                   </span>
                 </NavLink>
               </div>
-
             </div>
           </nav>
         </div>
       </div>
       {/* Navbar End */}
-      {/* Modal Search Start */}
-      <div className="modal fade" id="searchModal" tabIndex={-1} aria-labelledby="exampleModalLabel" aria-hidden="true">
-        <div className="modal-dialog modal-fullscreen">
-          <div className="modal-content rounded-0">
-            <div className="modal-header">
-              <h5 className="modal-title" id="exampleModalLabel">Search by keyword</h5>
-              <button type="button" className="btn-close" data-bs-dismiss="modal" aria-label="Close" />
-            </div>
-            <div className="modal-body d-flex align-items-center">
-              <div className="input-group w-75 mx-auto d-flex">
-                <input type="search" className="form-control p-3" placeholder="keywords" aria-describedby="search-icon-1" />
-                <span id="search-icon-1" className="input-group-text p-3"><i className="fa fa-search" /></span>
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
-      {/* Modal Search End */}
     </div>
   );
 }

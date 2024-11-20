@@ -6,5 +6,5 @@ import { categoriesReducer } from "./category.reducer";
 export const RootReducer = combineReducers({
     products : productReducer,
     categories: categoriesReducer,
-    cart : cartSlice
+    cart : cartSlice,
 })

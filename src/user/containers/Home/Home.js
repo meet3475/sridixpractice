@@ -15,10 +15,16 @@ function Home(props) {
     console.log(products);
 
     const [searchData, setSearchData] = useState('');
+    const [isCarouselReady, setIsCarouselReady] = useState(false);
 
 
     useEffect(() => {
         dispatch(getproduct())
+        const timer = setTimeout(() => setIsCarouselReady(true), 500);
+        return () => clearTimeout(timer);
+    }, [dispatch])
+
+    useEffect(() => {
         window.scrollTo(0, 0);
     }, [dispatch])
 
@@ -29,8 +35,8 @@ function Home(props) {
             const data = await response.json();
 
             if (searchData && data.products.length > 0) {
-                // Redirect to product results page with search results
-                navigate(`/product?search=${searchData}`);;
+
+                navigate(`/product?search=${searchData}`);
             } else {
                 alert('No products found!');
             }
@@ -84,6 +90,32 @@ function Home(props) {
         }
     }
 
+    let category_carousel = {
+        autoplay: true,
+        smartSpeed: 1500,
+        center: false,
+        dots: true,
+        loop: true,
+        margin: 25,
+        responsiveClass: true,
+        responsive: {
+            0: {
+                items: 1
+            },
+            576: {
+                items: 1
+            },
+            768: {
+                items: 1
+            },
+            992: {
+                items: 1
+            },
+            1200: {
+                items: 1
+            }
+        }
+    }
 
     return (
         <div>
@@ -94,7 +126,7 @@ function Home(props) {
                         <div className="col-md-12 col-lg-7">
                             <h4 className="mb-3 text-secondary">100% Organic Foods</h4>
                             <h1 className="mb-5 display-3 text-primary">Organic Veggies &amp; Fruits Foods</h1>
-                            <div className="position-relative mx-auto">
+                            {/* <div className="position-relative mx-auto">
 
                                 <input
                                     className="form-control border-2 border-secondary w-75 py-3 px-4 rounded-pill"
@@ -112,91 +144,88 @@ function Home(props) {
                                     Submit Now
                                 </button>
 
-                            </div>
+                            </div> */}
                         </div>
                         <div className="col-md-12 col-lg-5">
                             <div id="carouselId" className="carousel slide position-relative" data-bs-ride="carousel">
-                                <div className="carousel-inner" role="listbox">
-                                    <div className="carousel-item active rounded">
-                                        <img src="img/hero-img-1.png" className="img-fluid w-100 h-100 bg-secondary rounded" alt="First slide" />
-                                        <a href="#" className="btn px-4 py-2 text-white rounded">Fruites</a>
-                                    </div>
-                                    <div className="carousel-item rounded">
-                                        <img src="img/hero-img-2.jpg" className="img-fluid w-100 h-100 rounded" alt="Second slide" />
-                                        <a href="#" className="btn px-4 py-2 text-white rounded">Vesitables</a>
-                                    </div>
-                                </div>
-                                <button className="carousel-control-prev" type="button" data-bs-target="#carouselId" data-bs-slide="prev">
-                                    <span className="carousel-control-prev-icon" aria-hidden="true" />
-                                    <span className="visually-hidden">Previous</span>
-                                </button>
-                                <button className="carousel-control-next" type="button" data-bs-target="#carouselId" data-bs-slide="next">
-                                    <span className="carousel-control-next-icon" aria-hidden="true" />
-                                    <span className="visually-hidden">Next</span>
-                                </button>
+
+                                <OwlCarousel {...category_carousel} className="owl-carousel vegetable-carousel justify-content-center">
+                                    {firstProductPerCategory.map((v) => (
+                                        <Link to={`/product?category=${v.category}`} key={v.id}>
+                                            <div className="border border-primary rounded position-relative vesitable-item">
+                                                <div className="vesitable-img">
+                                                    <img src={v.images[0]} style={{ height: "300px" }} className="img-fluid w-100 rounded-top" alt="" />
+                                                </div>
+                                                <div className="p-4 rounded-bottom">
+                                                    <h5>Category: {capitalizeFirstLetter(v.category)}</h5>
+                                                </div>
+                                            </div>
+                                        </Link>
+                                    ))}
+                                </OwlCarousel>
+
                             </div>
                         </div>
                     </div>
                 </div>
             </div>
             {/* Hero End */}
-            {/* Vesitable Shop Start*/}
-            <div className="container-fluid vesitable py-5">
-                <div className="container py-5">
-                    <h2>Category List : </h2>
-                    <OwlCarousel {...products_carousel} className="owl-carousel vegetable-carousel justify-content-center">
-                        {
-                            firstProductPerCategory.map((v) => (
-                                <Link to={`/product`}>
-                                    <div className="border border-primary rounded position-relative vesitable-item" key={v.id}>
-                                        <div className="vesitable-img">
-                                            <img src={v.images[0]} style={{ height: "200px" }} className="img-fluid w-100 rounded-top" alt="" />
-                                        </div>
-                                        <div className="p-4 rounded-bottom">
-                                            <h5>Category: {capitalizeFirstLetter(v.category)}</h5>
-                                            <h6>{v.title.length > 20 ? v.title.substring(0, 20) + "..." : v.title}</h6>
-                                            <p>{v.description.length > 40 ? v.description.substring(0, 40) + "..." : v.description}</p>
-                                            <div className="justify-content-between flex-lg-wrap">
-                                                <p className="text-dark fs-5 fw-bold mb-0">${v.price} / kg</p>
+            {isCarouselReady && (
+                <>
+                    {/* First Carousel */}
+                    <div className="container-fluid vesitable py-5">
+                        <div className="container py-5">
+                            <h2>Category List:</h2>
+                            <OwlCarousel {...products_carousel} className="owl-carousel vegetable-carousel justify-content-center">
+                                {firstProductPerCategory.map((v) => (
+                                    <Link to={`/product`} key={v.id}>
+                                        <div className="border border-primary rounded position-relative vesitable-item">
+                                            <div className="vesitable-img">
+                                                <img src={v.images[0]} style={{ height: "200px" }} className="img-fluid w-100 rounded-top" alt="" />
+                                            </div>
+                                            <div className="p-4 rounded-bottom">
+                                                <h5>Category: {capitalizeFirstLetter(v.category)}</h5>
+                                                <h6>{v.title.length > 20 ? v.title.substring(0, 20) + "..." : v.title}</h6>
+                                                <p>{v.description.length > 40 ? v.description.substring(0, 40) + "..." : v.description}</p>
+                                                <div className="justify-content-between flex-lg-wrap">
+                                                    <p className="text-dark fs-5 fw-bold mb-0">${v.price} / kg</p>
+                                                </div>
                                             </div>
                                         </div>
-                                    </div>
-                                </Link>
-                            ))
-                        }
-                    </OwlCarousel >
-                </div>
-            </div>
-            {/* Vesitable Shop End */}
-            {/* Vesitable Shop Start*/}
-            <div className="container-fluid vesitable py-5">
-                <div className="container py-5">
-                    <h2>Products List : </h2>
-                    <OwlCarousel {...products_carousel} className="owl-carousel vegetable-carousel justify-content-center">
-                        {
-                            products.map((v) => (
-                                <Link to={`/productdetail/${v.id}`}>
-                                    <div className="border border-primary rounded position-relative vesitable-item">
-                                        <div className="vesitable-img">
-                                            <img src={v.images[0]} style={{ height: "200px" }} className="img-fluid w-100 rounded-top" alt />
-                                        </div>
-                                        <div className="p-4 rounded-bottom">
-                                            <h4>{v.title.length > 15 ? v.title.substring(0, 15) + "..." : v.title}</h4>
-                                            <p>{v.description.length > 40 ? v.description.substring(0, 40) + "..." : v.description}</p>
-                                            <div className="justify-content-between flex-lg-wrap">
-                                                <p className="text-dark fs-5 fw-bold mb-0">${v.price} / kg</p>
-                                                <p className="text-dark mb-0"> rating : {v.rating}</p>
-                                                <p className="text-dark mb-0">Discount : {v.discountPercentage}%</p>
+                                    </Link>
+                                ))}
+                            </OwlCarousel>
+                        </div>
+                    </div>
+
+                    {/* Second Carousel */}
+                    <div className="container-fluid vesitable py-5">
+                        <div className="container py-5">
+                            <h2>Products List:</h2>
+                            <OwlCarousel {...products_carousel} className="owl-carousel vegetable-carousel justify-content-center">
+                                {products.map((v) => (
+                                    <Link to={`/productdetail/${v.id}`} key={v.id}>
+                                        <div className="border border-primary rounded position-relative vesitable-item">
+                                            <div className="vesitable-img">
+                                                <img src={v.images[0]} style={{ height: "200px" }} className="img-fluid w-100 rounded-top" alt="" />
+                                            </div>
+                                            <div className="p-4 rounded-bottom">
+                                                <h4>{v.title.length > 15 ? v.title.substring(0, 15) + "..." : v.title}</h4>
+                                                <p>{v.description.length > 40 ? v.description.substring(0, 40) + "..." : v.description}</p>
+                                                <div className="justify-content-between flex-lg-wrap">
+                                                    <p className="text-dark fs-5 fw-bold mb-0">${v.price} / kg</p>
+                                                    <p className="text-dark mb-0">Rating: {v.rating}</p>
+                                                    <p className="text-dark mb-0">Discount: {v.discountPercentage}%</p>
+                                                </div>
                                             </div>
                                         </div>
-                                    </div>
-                                </Link>
-                            ))
-                        }
-                    </OwlCarousel >
-                </div>
-            </div>
-            {/* Vesitable Shop End */}
+                                    </Link>
+                                ))}
+                            </OwlCarousel>
+                        </div>
+                    </div>
+                </>
+            )}
             {/* Featurs Start */}
             <div className="container-fluid service py-5">
                 <div className="container py-5">
